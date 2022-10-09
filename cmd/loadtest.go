@@ -554,11 +554,22 @@ func mainLoop(ctx context.Context, c *ethclient.Client) error {
 		break
 	}
 
-	_, err = delegatorContract.Call(tops, ltAddr, []byte{0x12, 0x87, 0xa6, 0x8c})
-	if err != nil {
-		log.Error().Err(err).Msg("Load Test contract deployed successfully, but delegator contract failed.")
-		return err
+	waitCounter = 30
+	for {
+		_, err = delegatorContract.Call(tops, ltAddr, []byte{0x12, 0x87, 0xa6, 0x8c})
+		if err != nil {
+			log.Trace().Msg("Waiting for contract to deploy")
+			time.Sleep(time.Second)
+			if waitCounter < 1 {
+				log.Error().Err(err).Msg("Exhausted waiting period for contract deployment")
+				return err
+			}
+			waitCounter = waitCounter - 1
+			continue
+		}
+		break
 	}
+
 	currentNonce = currentNonce + 1
 
 	var currentNonceMutex sync.Mutex
