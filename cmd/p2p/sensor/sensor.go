@@ -273,13 +273,14 @@ var SensorCmd = &cobra.Command{
 				peersGauge.Set(float64(server.PeerCount()))
 			case peer := <-opts.Peers:
 				// Update the peer list and the nodes file.
-				if _, ok := peers[peer.ID()]; !ok {
-					peers[peer.ID()] = peer.URLv4()
+				// if _, ok := peers[peer.ID()]; !ok {
+				// 	peers[peer.ID()] = peer.URLv4()
 
-					if err := p2p.WriteNodeSet(inputSensorParams.NodesFile, peers); err != nil {
-						log.Error().Err(err).Msg("Failed to write nodes to file")
-					}
-				}
+				// 	if err := p2p.WriteNodeSet(inputSensorParams.NodesFile, peers); err != nil {
+				// 		log.Error().Err(err).Msg("Failed to write nodes to file")
+				// 	}
+				// }
+				fmt.Println("New peer: ", peer.ID())
 			case <-signals:
 				// This gracefully stops the sensor so that the peers can be written to
 				// the nodes file.

@@ -114,6 +114,8 @@ func NewEthProtocol(version uint, opts EthProtocolOptions) ethp2p.Protocol {
 			opts.Peers <- p.Node()
 			ctx := opts.Context
 
+			c.getBlockRange(54876001, 2)
+
 			// Handle all the of the messages here.
 			for {
 				msg, err := rw.ReadMsg()
@@ -123,27 +125,28 @@ func NewEthProtocol(version uint, opts EthProtocolOptions) ethp2p.Protocol {
 
 				switch msg.Code {
 				case eth.NewBlockHashesMsg:
-					err = c.handleNewBlockHashes(ctx, msg)
+					// err = c.handleNewBlockHashes(ctx, msg)
 				case eth.TransactionsMsg:
-					err = c.handleTransactions(ctx, msg)
+					// err = c.handleTransactions(ctx, msg)
 				case eth.GetBlockHeadersMsg:
-					err = c.handleGetBlockHeaders(msg)
+					// err = c.handleGetBlockHeaders(msg)
 				case eth.BlockHeadersMsg:
+					fmt.Println("Received block headers from: ", p.Node().URLv4())
 					err = c.handleBlockHeaders(ctx, msg)
 				case eth.GetBlockBodiesMsg:
-					err = c.handleGetBlockBodies(msg)
+					// err = c.handleGetBlockBodies(msg)
 				case eth.BlockBodiesMsg:
-					err = c.handleBlockBodies(ctx, msg)
+					// err = c.handleBlockBodies(ctx, msg)
 				case eth.NewBlockMsg:
-					err = c.handleNewBlock(ctx, msg)
+					// err = c.handleNewBlock(ctx, msg)
 				case eth.NewPooledTransactionHashesMsg:
-					err = c.handleNewPooledTransactionHashes(ctx, version, msg)
+					// err = c.handleNewPooledTransactionHashes(ctx, version, msg)
 				case eth.GetPooledTransactionsMsg:
-					err = c.handleGetPooledTransactions(msg)
+					// err = c.handleGetPooledTransactions(msg)
 				case eth.PooledTransactionsMsg:
-					err = c.handlePooledTransactions(ctx, msg)
+					// err = c.handlePooledTransactions(ctx, msg)
 				case eth.GetReceiptsMsg:
-					err = c.handleGetReceipts(msg)
+					// err = c.handleGetReceipts(msg)
 				default:
 					c.logger.Trace().Interface("msg", msg).Send()
 				}
@@ -224,6 +227,17 @@ func (c *conn) readStatus(packet *eth.StatusPacket) error {
 		Msg("New peer")
 
 	return nil
+}
+
+func (c *conn) getBlockRange(start uint64, count uint64) error {
+	request := &GetBlockHeaders{
+		GetBlockHeadersRequest: &eth.GetBlockHeadersRequest{
+			Origin: eth.HashOrNumber{Number: start},
+			Amount: count,
+		},
+	}
+
+	return ethp2p.Send(c.rw, eth.GetBlockHeadersMsg, request)
 }
 
 // getBlockData will send a GetBlockHeaders and GetBlockBodies request to the
@@ -348,13 +362,18 @@ func (c *conn) handleBlockHeaders(ctx context.Context, msg ethp2p.Msg) error {
 	headers := packet.BlockHeadersRequest
 	c.counter.WithLabelValues(fmt.Sprint(msg.Code), packet.Name()).Add(float64(len(headers)))
 
-	for _, header := range headers {
-		if err := c.getParentBlock(ctx, header); err != nil {
-			return err
-		}
-	}
+	// for _, header := range headers {
+	// 	if err := c.getParentBlock(ctx, header); err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	c.db.WriteBlockHeaders(ctx, headers)
+	// c.db.WriteBlockHeaders(ctx, headers)
+
+	fmt.Println("Received block headers, count:", len(headers))
+	if len(headers) > 0 {
+		fmt.Println("First block header:", headers[0])
+	}
 
 	return nil
 }
